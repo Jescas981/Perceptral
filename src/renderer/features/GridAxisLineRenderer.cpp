@@ -79,10 +79,10 @@ void GridAxisLineRenderer::initialize() {
   vertices.push_back({0.0f, -axisLength, 0.0f, 0.0f, 0.5f, 0.0f, 1.0f});
 
   // Z axis (BLUE) - extends along Z (up)
-  vertices.push_back({0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f});
-  vertices.push_back({0.0f, 0.0f, axisLength, 0.0f, 0.0f, 1.0f, 1.0f});
-  vertices.push_back({0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 1.0f});
-  vertices.push_back({0.0f, 0.0f, -axisLength, 0.0f, 0.0f, 0.5f, 1.0f});
+  // vertices.push_back({0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f});
+  // vertices.push_back({0.0f, 0.0f, axisLength, 0.0f, 0.0f, 1.0f, 1.0f});
+  // vertices.push_back({0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 1.0f});
+  // vertices.push_back({0.0f, 0.0f, -axisLength, 0.0f, 0.0f, 0.5f, 1.0f});
 
   totalVertexCount_ = vertices.size();
 
@@ -106,7 +106,7 @@ void GridAxisLineRenderer::render(const Component::Camera &camera) {
   // Configure render state via Renderer abstraction
   Renderer::setBlending(true);
   Renderer::setDepthTest(true);
-  Renderer::setDepthMask(true);
+  Renderer::setDepthMask(false);
 
   shader_->bind();
   shader_->setMat4("uViewProjection", camera.viewProjectionMatrix);
@@ -127,6 +127,8 @@ void GridAxisLineRenderer::render(const Component::Camera &camera) {
   // Optional: restore defaults if you rely on implicit state
   Renderer::setLineWidth(1.0f);
   Renderer::setBlending(false);
+  Renderer::setDepthMask(true);
+
 }
 
 } // namespace Perceptral

@@ -89,8 +89,6 @@ set(CORE_HEADERS
     include/Perceptral/scene/systems/ScriptSystem.h
 
     # I/O
-    include/Perceptral/io/PLYLoader.h
-    include/Perceptral/io/ImageExporter.h
 
     # UI
     include/Perceptral/ui/ImGuiLayer.h

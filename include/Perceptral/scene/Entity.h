@@ -1,5 +1,6 @@
 #pragma once
 
+#include "entt/entity/fwd.hpp"
 #include <Perceptral/core/Macros.h>
 #include <entt/entt.hpp>
 
@@ -12,7 +13,7 @@ public:
       : entityHandle_(handle), registry_(registry) {};
   Entity(const Entity &other) = default;
   Entity &operator=(const Entity &other) = default;
-
+  
   template <typename T, typename... Args> T &addComponent(Args &&...args);
 
   template <typename T> T &getComponent();

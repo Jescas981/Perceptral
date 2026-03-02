@@ -1,14 +1,16 @@
 #include "Perceptral/core/Event.h"
 #include "Perceptral/core/Log.h"
 #include "Perceptral/core/math/TransformUtils.h"
+#include "Perceptral/scene/Scene.h"
 #include <Perceptral/scene/Components.h>
 #include <Perceptral/scene/systems/CameraSystem.h>
 #include <iostream>
 
 namespace Perceptral {
 
-void CameraSystem::onUpdate(entt::registry &registry, DeltaTime deltaTime) {
+void CameraSystem::onUpdate(Scene &scene, DeltaTime deltaTime) {
   UNUSED(deltaTime);
+  auto &registry = scene.getRegistry();
 
   auto view = registry.view<Component::Transform, Component::Camera>();
 
@@ -33,7 +35,8 @@ void CameraSystem::onUpdate(entt::registry &registry, DeltaTime deltaTime) {
   }
 }
 
-void CameraSystem::onEvent(entt::registry &registry, Event &event) {
+void CameraSystem::onEvent(Scene &scene, Event &event) {
+  auto &registry = scene.getRegistry();
   EventDispatcher dispatcher(event);
 
   dispatcher.dispatch<WindowResizeEvent>([&registry](WindowResizeEvent &e) {

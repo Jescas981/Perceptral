@@ -1,3 +1,4 @@
+#include "Perceptral/core/AssetManager.h"
 #include <Perceptral/renderer/ShaderLibrary.h>
 #include <Perceptral/core/Log.h>
 
@@ -17,13 +18,13 @@ void ShaderLibrary::add(const std::shared_ptr<Shader>& shader) {
 }
 
 std::shared_ptr<Shader> ShaderLibrary::load(const std::string& filepath) {
-    auto shader = Shader::create(filepath);
+    auto shader =  AssetManager::load<Shader>(filepath);
     add(shader);
     return shader;
 }
 
 std::shared_ptr<Shader> ShaderLibrary::load(const std::string& name, const std::string& filepath) {
-    auto shader = Shader::create(filepath);
+    auto shader =  AssetManager::load<Shader>(filepath);
     add(name, shader);
     return shader;
 }

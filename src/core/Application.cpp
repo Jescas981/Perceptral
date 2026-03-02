@@ -1,3 +1,4 @@
+#include "Perceptral/core/AssetManager.h"
 #include <Perceptral/core/Application.h>
 #include <Perceptral/core/DeltaTime.h>
 #include <Perceptral/core/Input.h>
@@ -23,6 +24,7 @@ bool Application::initialize() {
   config_ = getDefaultConfig();
 
   Log::init();
+  AssetManager::init();
   PC_CORE_INFO("Initializing Application: {}", config_.windowTitle);
 
   Time::initialize();

@@ -4,7 +4,7 @@
 
 namespace Perceptral {
 
-std::shared_ptr<Shader> Shader::create(const std::string &filepath) {
+std::shared_ptr<Shader> Shader::createFromFile(const std::string &filepath) {
     #ifdef PC_RENDER_API_OPENGL
         return std::make_shared<OpenGLShader>(filepath);
     #else

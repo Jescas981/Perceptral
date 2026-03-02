@@ -2,8 +2,8 @@
 
 #include "Perceptral/core/Event.h"
 #include <Perceptral/core/DeltaTime.h>
-#include <Perceptral/scene/Entity.h>
 #include <Perceptral/scene/Components.h>
+#include <Perceptral/scene/Entity.h>
 #include <Perceptral/scene/systems/System.h>
 #include <entt/entt.hpp>
 #include <string>
@@ -26,10 +26,11 @@ public:
 
   // Entity management
   Entity createEntity(const std::string &name = "Entity");
+  Entity createEntityChild(const std::string &name, Entity parent);
+
   void destroyEntity(Entity entity);
   void clear();
 
-  // Named entity lookup
   Entity findEntityByName(const std::string &name);
 
   // Camera management
@@ -54,6 +55,5 @@ private:
   entt::registry registry_;
   std::vector<std::unique_ptr<System>> systems_;
 };
-
 
 } // namespace Perceptral

@@ -6,24 +6,25 @@
 namespace Perceptral {
 
 class Event;
+class Scene;
 
 class System {
 public:
   virtual ~System() = default;
 
   // Lifecycle methods
-  virtual void onCreate(entt::registry &registry) { UNUSED(registry); }
-  virtual void onUpdate(entt::registry &registry, DeltaTime deltaTime) {
-    UNUSED(registry);
+  virtual void onCreate(Scene &scene) { UNUSED(scene); }
+  virtual void onUpdate(Scene &scene, DeltaTime deltaTime) {
+    UNUSED(scene);
     UNUSED(deltaTime);
   }
-  virtual void onRender(entt::registry &registry) { UNUSED(registry); }
-  virtual void onEvent(entt::registry &registry, Event &e) {
-    UNUSED(registry);
+  virtual void onRender(Scene &scene) { UNUSED(scene); }
+  virtual void onEvent(Scene &scene, Event &e) {
+    UNUSED(scene);
     UNUSED(e);
   }
-  virtual void onDestroy(entt::registry &registry) { UNUSED(registry); }
-  virtual void onImGuiRender(entt::registry &registry) { UNUSED(registry); }
+  virtual void onDestroy(Scene &scene) { UNUSED(scene); }
+  virtual void onImGuiRender(Scene &scene) { UNUSED(scene); }
 
   // Control
   void setEnabled(bool enabled) { enabled_ = enabled; }

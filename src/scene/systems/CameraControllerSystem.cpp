@@ -1,6 +1,8 @@
 #include "Perceptral/scene/systems/CameraControllerSystem.h"
 #include "Perceptral/core/Event.h"
+#include "Perceptral/core/Input.h"
 #include "Perceptral/core/KeyCodes.h"
+#include "Perceptral/scene/Scene.h"
 #include <Eigen/src/Core/Matrix.h>
 #include <Perceptral/core/DeltaTime.h>
 #include <Perceptral/core/Log.h>
@@ -11,9 +13,10 @@
 
 namespace Perceptral {
 
-void CameraControllerSystem::onUpdate(entt::registry &registry,
-                                      DeltaTime deltaTime) {
+void CameraControllerSystem::onUpdate(Scene &scene, DeltaTime deltaTime) {
   UNUSED(deltaTime);
+
+  auto &registry = scene.getRegistry();
   // Find all entities that have Transform + CameraController
   auto view = registry.view<Component::Transform, Component::Camera,
                             Component::OrbitCameraController>();
@@ -52,43 +55,53 @@ void CameraControllerSystem::onUpdate(entt::registry &registry,
   }
 }
 
-void CameraControllerSystem::onEvent(entt::registry &registry, Event &event) {
-  // Find all entities that have Transform + CameraController
+void CameraControllerSystem::onEvent(Scene &scene, Event &event) {
+  auto &registry = scene.getRegistry();
+
   auto view = registry.view<Component::Transform, Component::Camera,
                             Component::OrbitCameraController>();
 
-  auto dispatcher = EventDispatcher(event);
+  EventDispatcher dispatcher(event);
 
-  dispatcher.dispatch<MouseButtonPressedEvent>(
-      [&view](MouseButtonPressedEvent &e) {
-        for (auto entity : view) {
-          auto &controller = view.get<Component::OrbitCameraController>(entity);
+  // --------------------------------------------------------
+  // Middle Mouse Pressed (start orbit/pan)
+  // --------------------------------------------------------
+  dispatcher.dispatch<MouseButtonPressedEvent>([&view](
+                                                   MouseButtonPressedEvent &e) {
+    if (e.getMouseButton() == MouseButton::Middle) {
+      for (auto entity : view) {
+        auto &controller = view.get<Component::OrbitCameraController>(entity);
 
-          if (e.getMouseButton() == MouseButton::Left) {
-            // Rotate here
-            controller.isRotating = true;
-            controller.firstMovement = true;
-          }
-        }
-        return false;
-      });
+        controller.isMoving = true;
+        controller.firstMovement = true;
+      }
+    }
+    return false;
+  });
 
+  // --------------------------------------------------------
+  // Middle Mouse Released
+  // --------------------------------------------------------
   dispatcher.dispatch<MouseButtonReleasedEvent>(
       [&view](MouseButtonReleasedEvent &e) {
-        for (auto entity : view) {
-          auto &controller = view.get<Component::OrbitCameraController>(entity);
+        if (e.getMouseButton() == MouseButton::Middle) {
+          for (auto entity : view) {
+            auto &controller =
+                view.get<Component::OrbitCameraController>(entity);
 
-          if (e.getMouseButton() == MouseButton::Left) {
-            // Rotate here
-            controller.isRotating = false;
+            controller.isMoving = false;
           }
         }
         return false;
       });
 
+  // --------------------------------------------------------
+  // Mouse Move
+  // --------------------------------------------------------
   dispatcher.dispatch<MouseMovedEvent>([&view](MouseMovedEvent &e) {
     for (auto entity : view) {
       auto &controller = view.get<Component::OrbitCameraController>(entity);
+      auto &transform = view.get<Component::Transform>(entity);
 
       if (controller.firstMovement) {
         controller.lastMouseX = e.getX();
@@ -97,25 +110,51 @@ void CameraControllerSystem::onEvent(entt::registry &registry, Event &event) {
         return false;
       }
 
-      if (controller.isRotating) {
+      if (controller.isMoving) {
         float deltaX = e.getX() - controller.lastMouseX;
         float deltaY = e.getY() - controller.lastMouseY;
 
-        controller.yaw += deltaX * controller.rotationSpeed;
-        controller.pitch += deltaY * controller.rotationSpeed;
+        // ------------------------------------------------
+        // Shift + MMB → PAN
+        // ------------------------------------------------
+        if (Input::isKeyPressed(KeyCode::LeftShift)) {
+          // Camera basis vectors (Z-up world)
+          Eigen::Vector3f right = transform.rotation * Eigen::Vector3f::UnitX();
+
+          Eigen::Vector3f up = transform.rotation * Eigen::Vector3f::UnitZ();
+
+          // Distance-scaled pan speed
+          float panSpeed = 0.002f * controller.distance;
+
+          controller.target -= right * deltaX * panSpeed;
+          controller.target += up * deltaY * panSpeed;
+        }
+        // ------------------------------------------------
+        // MMB → ORBIT
+        // ------------------------------------------------
+        else {
+          controller.yaw += deltaX * controller.rotationSpeed;
+          controller.pitch -= deltaY * controller.rotationSpeed;
+        }
 
         controller.lastMouseX = e.getX();
         controller.lastMouseY = e.getY();
       }
     }
+
     return false;
   });
 
+  // --------------------------------------------------------
+  // Scroll → Zoom
+  // --------------------------------------------------------
   dispatcher.dispatch<MouseScrolledEvent>([&view](MouseScrolledEvent &e) {
     for (auto entity : view) {
       auto &controller = view.get<Component::OrbitCameraController>(entity);
+
       controller.distance -= e.getYOffset() * controller.zoomSpeed;
     }
+
     return false;
   });
 }

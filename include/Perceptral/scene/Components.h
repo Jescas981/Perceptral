@@ -2,9 +2,11 @@
 #include <Eigen/Eigen>
 #include <Perceptral/core/DeltaTime.h>
 #include <Perceptral/core/Macros.h>
-#include <Perceptral/renderer/Shader.h>
+#include <Perceptral/core/assets/PointCloud.h>
 #include <Perceptral/renderer/Material.h>
+#include <Perceptral/renderer/Shader.h>
 #include <Perceptral/renderer/VertexArray.h>
+#include <entt/entt.hpp>
 
 namespace Perceptral {
 class Scriptable;
@@ -49,7 +51,7 @@ struct OrbitCameraController {
   float maxPitch = 89.0f;
 
   bool firstMovement = false;
-  bool isRotating = false;
+  bool isMoving = false;
   float lastMouseX = 0.0f;
   float lastMouseY = 0.0f;
 };
@@ -69,6 +71,55 @@ struct NativeScript {
 /***************************
   RENDERABLE FUNCTIONALITY
 ***************************/
+
+enum ColorMode {
+  FlatColor,
+  RGBField,
+  LabelField,
+  ScalarField,
+  AxisColorX,
+  AxisColorY,
+  AxisColorZ,
+};
+
+struct PointCloudData {
+  // Asset reference — actual xyz/fields data lives here, shared
+  std::shared_ptr<Asset::PointCloud> asset;
+
+  // Rendering intent — what the renderer should use
+  std::string activeField;
+  ColorMode colorMode = ColorMode::FlatColor;
+
+  // Selection — per-point, lives here since it's per-entity state
+  std::vector<bool> selected;
+  float fieldMin = 0.0f;
+  float fieldMax = 1.0f;
+  float pointSize = 1.0f;
+  Eigen::Vector3f selectionColor{1.0f, 0.0f, 0.0f};
+  std::vector<Eigen::Vector3f>
+      labelColors; // Color for each label ID (index = label ID)
+
+  bool isDirty = true;
+  bool autoRange = true;
+
+  PointCloudData() = default;
+  PointCloudData(const PointCloudData &other) = default;
+  PointCloudData(PointCloudData &&other) noexcept = default;
+  PointCloudData(Asset::PointCloud::Ptr asset) : asset(asset) {}
+};
+
+struct PointCloudRenderer {
+  Material material;
+  bool visible{true};
+
+  struct GPU {
+    std::shared_ptr<VertexArray> vao{nullptr};
+    std::size_t pointCount = 0;
+  } gpu;
+
+  PointCloudRenderer() = default;
+  PointCloudRenderer(Material material) : material(std::move(material)) {}
+};
 
 struct PC_API MeshData {
   std::vector<Eigen::Vector3f> vertices;
@@ -108,6 +159,14 @@ struct PC_API Transform {
   Eigen::Vector3f translation = Eigen::Vector3f::Zero();
   Eigen::Quaternionf rotation = Eigen::Quaternionf::Identity();
   Eigen::Vector3f scale = Eigen::Vector3f::Ones();
+};
+
+struct PC_API Relationship {
+  entt::entity parent = entt::null;
+  std::vector<entt::entity> children = {};
+
+  Relationship(entt::entity parent) : parent(parent) {}
+  Relationship() {}
 };
 
 } // namespace Component

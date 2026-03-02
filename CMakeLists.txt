@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.23)
 project(CloudAnnotationCore VERSION 1.0.0 LANGUAGES CXX C)
 
 # Options
+set(CMAKE_BUILD_TYPE Debug)
 add_subdirectory(external)
 
 # Find required packages
@@ -21,6 +22,7 @@ set(CORE_SOURCES
     src/core/LayerStack.cpp
     src/core/layers/GameLayer.cpp
     src/core/Time.cpp
+    src/core/AssetManager.cpp
 
     # New renderer abstraction
     src/renderer/RenderAPI.cpp
@@ -46,6 +48,8 @@ set(CORE_SOURCES
     src/scene/systems/RenderSystem.cpp
     src/scene/systems/ScriptSystem.cpp
 
+    src/core/assets/PointCloud.cpp
+
     # I/O
 
     # UI
@@ -62,6 +66,7 @@ set(CORE_HEADERS
     include/Perceptral/core/KeyCodes.h
     include/Perceptral/core/Event.h
     include/Perceptral/core/Time.h
+    include/Perceptral/core/AssetManager.h
 
     # New renderer abstraction
     include/Perceptral/renderer/RenderAPI.h
@@ -114,17 +119,10 @@ set(IMGUI_HEADERS
     external/imgui/backends/imgui_impl_opengl3_loader.h
 )
 
-
 # Create core library
-add_library(perceptral STATIC ${CORE_SOURCES} ${CORE_HEADERS} ${IMGUI_SOURCES} ${IMGUI_HEADERS})
-
-target_include_directories(perceptral
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
+add_library(perceptral STATIC ${CORE_SOURCES} ${CORE_HEADERS} ${IMGUI_SOURCES} ${IMGUI_HEADERS} external/tinyply/source/tinyply.cpp)
+target_compile_definitions(perceptral PRIVATE PC_ENGINE_INTERNAL)
+target_compile_definitions(perceptral PRIVATE PC_ENGINE_ASSETS="${CMAKE_CURRENT_SOURCE_DIR}/assets")
 
 target_link_libraries(perceptral
     PUBLIC
@@ -134,73 +132,16 @@ target_link_libraries(perceptral
         spdlog::spdlog_header_only
         glfw
         glad
+        tomlplusplus::tomlplusplus
 )
 
 target_include_directories(perceptral
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/imgui>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/imgui/backends>
-        $<INSTALL_INTERFACE:include/imgui>
-        $<INSTALL_INTERFACE:include/imgui/backends>
+       ${CMAKE_CURRENT_SOURCE_DIR}/include
+       ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui
+       ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui/backends
+       ${CMAKE_CURRENT_SOURCE_DIR}/external/tinyply/source
 )
-
-target_compile_definitions(perceptral PRIVATE PC_ENGINE_INTERNAL)
-
-# Compiler warnings
-if(MSVC)
-    target_compile_options(perceptral PRIVATE /W4)
-else()
-    target_compile_options(perceptral PRIVATE -Wall -Wextra -Wpedantic)
-endif()
-
-# Copy assets to the build directory
-file(COPY ${CMAKE_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})
-
-# # Installation
-# install(TARGETS perceptral glad glfw EnTT spdlog_header_only happly
-#     EXPORT CloudAnnotationCoreTargets
-#     LIBRARY DESTINATION lib
-#     ARCHIVE DESTINATION lib
-#     RUNTIME DESTINATION bin
-#     INCLUDES DESTINATION include
-# )
-
-# install(DIRECTORY include/ DESTINATION include)
-# install(DIRECTORY shaders/ DESTINATION share/perceptral/shaders)
-
-# # Install external dependencies headers that are needed
-# install(DIRECTORY external/imgui/ DESTINATION include/imgui
-#     FILES_MATCHING PATTERN "*.h")
-# install(DIRECTORY external/imgui/backends/ DESTINATION include/imgui/backends
-#     FILES_MATCHING PATTERN "*.h")
-
-# # Export targets for find_package
-# install(EXPORT CloudAnnotationCoreTargets
-#     FILE CloudAnnotationCoreTargets.cmake
-#     NAMESPACE CloudAnnotationCore::
-#     DESTINATION lib/cmake/CloudAnnotationCore
-# )
-
-# # Create and install package config file
-# include(CMakePackageConfigHelpers)
-
-# configure_package_config_file(
-#     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/CloudAnnotationCoreConfig.cmake.in
-#     ${CMAKE_CURRENT_BINARY_DIR}/CloudAnnotationCoreConfig.cmake
-#     INSTALL_DESTINATION lib/cmake/CloudAnnotationCore
-# )
-
-# write_basic_package_version_file(
-#     ${CMAKE_CURRENT_BINARY_DIR}/CloudAnnotationCoreConfigVersion.cmake
-#     VERSION ${PROJECT_VERSION}
-#     COMPATIBILITY SameMajorVersion
-# )
-
-# install(FILES
-#     ${CMAKE_CURRENT_BINARY_DIR}/CloudAnnotationCoreConfig.cmake
-#     ${CMAKE_CURRENT_BINARY_DIR}/CloudAnnotationCoreConfigVersion.cmake
-#     DESTINATION lib/cmake/CloudAnnotationCore
-# )
 
 if(${BUILD_EXAMPLES})
     add_executable(app app/main.cpp)

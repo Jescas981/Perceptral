@@ -1,4 +1,5 @@
-#include "Perceptral/renderer/Renderer.h"
+#include <Perceptral/core/AssetManager.h>
+#include <Perceptral/renderer/Renderer.h>
 #include <Perceptral/core/Log.h>
 #include <Perceptral/renderer/Buffer.h>
 #include <Perceptral/renderer/Shader.h>
@@ -12,7 +13,7 @@ GridAxisLineRenderer::~GridAxisLineRenderer() {}
 
 void GridAxisLineRenderer::initialize() {
   vertexArray_ = VertexArray::create();
-  shader_ = Shader::create("assets/shaders/gridaxislines.glsl");
+  shader_ = AssetManager::load<Shader>("core:gridaxislines.glsl");
 
   struct Vertex {
     float x, y, z;

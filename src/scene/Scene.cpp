@@ -1,8 +1,9 @@
 #include "Perceptral/scene/Entity.h"
+#include "entt/entity/entity.hpp"
 #include <Perceptral/core/DeltaTime.h>
 #include <Perceptral/core/Macros.h>
-#include <Perceptral/scene/Scene.h>
 #include <Perceptral/scene/Components.h>
+#include <Perceptral/scene/Scene.h>
 
 namespace Perceptral {
 
@@ -12,37 +13,37 @@ Scene::~Scene() { clear(); }
 
 void Scene::onCreate() {
   for (auto &system : systems_) {
-    system->onCreate(registry_);
+    system->onCreate(*this);
   }
 }
 
 void Scene::onUpdate(DeltaTime deltaTime) {
   for (auto &system : systems_) {
-    system->onUpdate(registry_, deltaTime);
+    system->onUpdate(*this, deltaTime);
   }
 }
 
 void Scene::onImGuiRender() {
   for (auto &system : systems_) {
-    system->onImGuiRender(registry_);
+    system->onImGuiRender(*this);
   }
 }
 
 void Scene::onRender() {
   for (auto &system : systems_) {
-    system->onRender(registry_);
+    system->onRender(*this);
   }
 }
 
 void Scene::onEvent(Event &e) {
   for (auto &system : systems_) {
-    system->onEvent(registry_, e);
+    system->onEvent(*this, e);
   }
 }
 
 void Scene::onDestroy() {
   for (auto &system : systems_) {
-    system->onDestroy(registry_);
+    system->onDestroy(*this);
   }
 }
 
@@ -60,21 +61,30 @@ void Scene::setMainCamera(Entity cameraEntity) {
 }
 
 Entity Scene::getMainCamera() {
-    auto view = registry_.view<Component::Camera, Component::MainCamera>();
-    if (view.begin() != view.end()) {
-        return Entity{*view.begin(), &registry_};
-    }
-    Entity cameraEntity = createEntity("MainCamera");
-    cameraEntity.addComponent<Component::Camera>();
-    registry_.emplace<Component::MainCamera>(cameraEntity);
-    return cameraEntity;
+  auto view = registry_.view<Component::Camera, Component::MainCamera>();
+  if (view.begin() != view.end()) {
+    return Entity{*view.begin(), &registry_};
+  }
+  Entity cameraEntity = createEntity("MainCamera");
+  cameraEntity.addComponent<Component::Camera>();
+  registry_.emplace<Component::MainCamera>(cameraEntity);
+  return cameraEntity;
 }
-
 
 Entity Scene::createEntity(const std::string &name) {
   Entity entity = {registry_.create(), &registry_};
   entity.addComponent<Component::Tag>(name);
   entity.addComponent<Component::Transform>();
+  entity.addComponent<Component::Relationship>();
+  return entity;
+}
+
+Entity Scene::createEntityChild(const std::string &name, Entity parent) {
+  Entity entity = {registry_.create(), &registry_};
+  entity.addComponent<Component::Tag>(name);
+  entity.addComponent<Component::Transform>();
+  entity.addComponent<Component::Relationship>(parent);
+  parent.getComponent<Component::Relationship>().children.emplace_back(entity);
   return entity;
 }
 

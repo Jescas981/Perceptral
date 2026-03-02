@@ -1,3 +1,4 @@
+#include <Perceptral/core/AssetManager.h>
 #include <Perceptral/renderer/Buffer.h>
 #include <Perceptral/renderer/RenderAPI.h>
 #include <Perceptral/renderer/Renderer.h>
@@ -13,7 +14,7 @@ BackgroundRenderer::~BackgroundRenderer() {}
 
 void BackgroundRenderer::initialize(BackgroundSettings settings) {
   settings_ = settings;
-  shader_ = Shader::create("assets/shaders/background.glsl");
+  shader_ = AssetManager::load<Shader>("core:background.glsl");
   vertexArray_ = VertexArray::create();
   float vertices[12] = {
       0.0f, 0.0f, 0.0f, // bottom-left
